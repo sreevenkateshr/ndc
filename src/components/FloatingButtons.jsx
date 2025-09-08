@@ -15,7 +15,7 @@ const FloatingButtons = () => {
     <>
       {/* WhatsApp Left Side */}
       <a
-        href="https://wa.me/911234567890"
+        href="https://wa.me/+918680061311"
         target="_blank"
         rel="noopener noreferrer"
         className="floating-whatsapp"

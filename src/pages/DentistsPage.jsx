@@ -61,12 +61,20 @@ const DentistsPage = () => {
     
 
       {/* Subheader */}
-      <section className="text-center py-5 bg-secondary text-white">
-        <Container>
-          <h1>Our Dentists</h1>
-          <p><a href="index.html" className="text-white">Home</a> / Our Dentists</p>
-        </Container>
-      </section>
+           {/* Subheader / Banner */}
+           <section
+             className="text-center py-5 text-light"
+             style={{ backgroundColor: "#4A7CD2" }}
+           >
+             <Container>
+               <h1>Our Dentists</h1>
+               <hr className="border-light my-3" />
+               <p>
+                 <a href="/" className="text-light">Home</a> / Dentists
+               </p>
+             </Container>
+           </section>
+     
 
       {/* Dentists List */}
       <section className="py-5">

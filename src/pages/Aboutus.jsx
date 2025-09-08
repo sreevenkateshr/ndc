@@ -6,25 +6,20 @@ const AboutUs = () => {
   return (
     <div>
     {/* Subheader */}
-<section
-  className="text-center py-5"
-  style={{
-    backgroundImage: "url('https://picsum.photos/1600/400?random=20')",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    color: "#fff",
-  }}
->
-  <Container>
-    <h1>About Us</h1>
-    <p>
-      <a href="/" style={{ color: "#fff", textDecoration: "underline" }}>
-        Home
-      </a>{" "}
-      / About Us
-    </p>
-  </Container>
-</section>
+      {/* Subheader / Banner */}
+      <section
+        className="text-center py-5 text-light"
+        style={{ backgroundColor: "#4A7CD2" }}
+      >
+        <Container>
+          <h1>About Us</h1>
+          <hr className="border-light my-3" />
+          <p>
+            <a href="/" className="text-light">Home</a> / About us
+          </p>
+        </Container>
+      </section>
+
 
       {/* About Section */}
       <section className="py-5">
