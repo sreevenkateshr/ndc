@@ -20,7 +20,7 @@ const Footer = () => {
           <div className="col-lg-4 col-md-6">
             <h2 className="fw-bold d-flex align-items-center mb-3">
               <span className="me-2 text-primary fs-1">🦷</span>
-              <span className="fs-2">dentia</span>
+              <span className="fs-2">NDC</span>
             </h2>
             <p className="fs-6 text-secondary">
               At Dentia, we’re dedicated to providing high-quality,

@@ -17,12 +17,22 @@ const AdminDashboard = () => {
     const bookingsRef = collection(db, "onlinebookings");
     const unsubscribe = onSnapshot(bookingsRef, snapshot => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Sort bookings by date ascending
+      data.sort((a, b) => {
+        let dateA = a.date instanceof Timestamp ? a.date.toDate() : new Date(a.date);
+        let dateB = b.date instanceof Timestamp ? b.date.toDate() : new Date(b.date);
+        return dateA - dateB;
+      });
       setBookings(data);
     });
     return () => unsubscribe();
   }, []);
 
-  const filteredBookings = filterBookingsByDate(bookings, activeTab);
+  // Filter bookings by tab
+  const filteredBookings = filterBookingsByTab(bookings, activeTab);
+
+  // Group bookings by month
+  const bookingsByMonth = groupByMonth(filteredBookings);
 
   return (
     <div className="site-wrap">
@@ -64,38 +74,42 @@ const AdminDashboard = () => {
         <div className="content-columns">
           {activeSidebar === "Appointments" && (
             <div className="col">
-              <Table striped bordered hover responsive>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Service</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Message</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredBookings.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="text-center">No bookings</td>
-                    </tr>
-                  ) : (
-                    filteredBookings.map((b, i) => (
-                      <tr key={b.id}>
-                        <td>{i + 1}</td>
-                        <td>{b.name}</td>
-                        <td>{b.phone}</td>
-                        <td>{b.service}</td>
-                        <td>{formatBookingDate(b.date)}</td>
-                        <td>{b.time}</td>
-                        <td>{b.message}</td>
+              {Object.keys(bookingsByMonth).length === 0 && (
+                <p className="text-center">No bookings</p>
+              )}
+              {Object.keys(bookingsByMonth).map(month => (
+                <div key={month}>
+                  <h4 className="mt-4">{month}</h4>
+                  <Table striped bordered hover responsive>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Service</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Message</th>
+                        <th>Token</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </Table>
+                    </thead>
+                    <tbody>
+                      {bookingsByMonth[month].map((b, i) => (
+                        <tr key={b.id}>
+                          <td>{i + 1}</td>
+                          <td>{b.name}</td>
+                          <td>{b.phone}</td>
+                          <td>{b.service}</td>
+                          <td>{formatBookingDate(b.date)}</td>
+                          <td>{b.time}</td>
+                          <td>{b.message}</td>
+                          <td>{b.token}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              ))}
             </div>
           )}
 
@@ -115,7 +129,11 @@ const AdminDashboard = () => {
 
       <footer className="dashboard-footer">
         Developed by Sree Venkatesh &nbsp;
-        <a href="https://sreevenkatesh.vercel.app" target="_blank" rel="noopener noreferrer">
+        <a
+          href="https://sreevenkatesh.vercel.app"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           @sreevenkatesh.vercel.app
         </a>
       </footer>
@@ -123,25 +141,41 @@ const AdminDashboard = () => {
   );
 };
 
-// Filter bookings by tab
-const filterBookingsByDate = (bookings, tab) => {
+// Filter bookings by tab: Yesterday, Today, Tomorrow
+const filterBookingsByTab = (bookings, tab) => {
   const today = new Date();
   const todayStr = today.toLocaleDateString("en-CA");
 
   return bookings.filter(b => {
-    let bookingDate = b.date;
-
-    if (bookingDate instanceof Timestamp) bookingDate = bookingDate.toDate();
-    else bookingDate = new Date(bookingDate);
-
+    let bookingDate = b.date instanceof Timestamp ? b.date.toDate() : new Date(b.date);
     const bookingStr = bookingDate.toLocaleDateString("en-CA");
 
-    if (tab === "Yesterday") return bookingStr < todayStr;
+    if (tab === "Yesterday") {
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+      return bookingStr === yesterday.toLocaleDateString("en-CA");
+    }
     if (tab === "Today") return bookingStr === todayStr;
-    if (tab === "Tomorrow") return bookingStr > todayStr;
+    if (tab === "Tomorrow") {
+      const tomorrow = new Date();
+      tomorrow.setDate(today.getDate() + 1);
+      return bookingStr === tomorrow.toLocaleDateString("en-CA");
+    }
 
     return false;
   });
+};
+
+// Group bookings by month-year
+const groupByMonth = (bookings) => {
+  const months = {};
+  bookings.forEach(b => {
+    let bookingDate = b.date instanceof Timestamp ? b.date.toDate() : new Date(b.date);
+    const monthKey = bookingDate.toLocaleString("en-US", { month: "long", year: "numeric" });
+    if (!months[monthKey]) months[monthKey] = [];
+    months[monthKey].push(b);
+  });
+  return months;
 };
 
 // Format booking date for table

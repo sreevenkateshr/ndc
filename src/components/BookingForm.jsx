@@ -1,7 +1,6 @@
-// src/components/BookingFormStyled.jsx
 import React, { useState } from "react";
-import { Container, Row, Col, Form, Button } from "react-bootstrap";
-import { collection, addDoc } from "firebase/firestore";
+import { Container, Row, Col, Form, Button, Modal } from "react-bootstrap";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 
 const BookingFormStyled = () => {
@@ -14,30 +13,39 @@ const BookingFormStyled = () => {
     message: "",
   });
 
+  const [showModal, setShowModal] = useState(false);
+  const [token, setToken] = useState("");
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Generate incremental token like NDC-01
+  const generateToken = async () => {
+    const snapshot = await getDocs(collection(db, "onlinebookings"));
+    const count = snapshot.size + 1; // total bookings + 1
+    return `NDC-${count.toString().padStart(2, "0")}`;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      await addDoc(collection(db, "onlinebookings"), form);
+      // Generate token
+      const appointmentToken = await generateToken();
+      setToken(appointmentToken);
 
-      // WhatsApp link
-      const whatsappMessage = `Hello, I want to book: 
-Name: ${form.name}
-Phone: ${form.phone}
-Service: ${form.service}
-Date: ${form.date}
-Time: ${form.time}
-Message: ${form.message}`;
-      const whatsappURL = `https://wa.me/+916374926377?text=${encodeURIComponent(
-        whatsappMessage
-      )}`;
-      window.open(whatsappURL, "_blank");
+      // Save booking + token in Firestore
+      await addDoc(collection(db, "onlinebookings"), {
+        ...form,
+        token: appointmentToken,
+        createdAt: new Date(),
+      });
 
-      alert("Booking submitted successfully!");
+      // ✅ Show success modal
+      setShowModal(true);
+
+      // Reset form
       setForm({
         name: "",
         phone: "",
@@ -46,6 +54,10 @@ Message: ${form.message}`;
         time: "",
         message: "",
       });
+
+      // (Optional) send WhatsApp message in background
+      // ⚠️ Needs WhatsApp Cloud API (not free)
+      // If you want free → we keep only popup & admin panel
     } catch (error) {
       console.error("Error adding document: ", error);
       alert("Failed to submit booking.");
@@ -56,25 +68,17 @@ Message: ${form.message}`;
     <div id="content" className="no-top no-bottom">
       {/* Subheader */}
       <section
-        className="text-center py-5"
-        style={{
-          backgroundImage:
-            "url('https://source.unsplash.com/1600x400/?dentist,clinic')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          color: "#fff",
-        }}
+        className="text-center py-5 text-light"
+        style={{ backgroundColor: "#4A7CD2" }}
       >
         <Container>
-          <h1>Book Appointment</h1>
+          <h1>Appointment</h1>
+          <hr className="border-light my-3" />
           <p>
-            <a
-              href="/"
-              style={{ color: "#fff", textDecoration: "underline" }}
-            >
+            <a href="/" className="text-light">
               Home
             </a>{" "}
-            / Book Appointment
+            / Appointment
           </p>
         </Container>
       </section>
@@ -88,8 +92,8 @@ Message: ${form.message}`;
               <div className="p-4 rounded bg-light">
                 <h3 className="mb-3">Book Your Appointment</h3>
                 <p>
-                  Book your appointment today for expert dental care tailored
-                  to your needs. Healthy, beautiful smiles start with a simple
+                  Book your appointment today for expert dental care tailored to
+                  your needs. Healthy, beautiful smiles start with a simple
                   step!
                 </p>
 
@@ -103,21 +107,11 @@ Message: ${form.message}`;
                       required
                     >
                       <option value="">Select Service</option>
-                      <option value="General Dentistry">
-                        General Dentistry
-                      </option>
-                      <option value="Cosmetic Dentistry">
-                        Cosmetic Dentistry
-                      </option>
-                      <option value="Pediatric Dentistry">
-                        Pediatric Dentistry
-                      </option>
-                      <option value="Restorative Dentistry">
-                        Restorative Dentistry
-                      </option>
-                      <option value="Preventive Dentistry">
-                        Preventive Dentistry
-                      </option>
+                      <option value="General Dentistry">General Dentistry</option>
+                      <option value="Cosmetic Dentistry">Cosmetic Dentistry</option>
+                      <option value="Pediatric Dentistry">Pediatric Dentistry</option>
+                      <option value="Restorative Dentistry">Restorative Dentistry</option>
+                      <option value="Preventive Dentistry">Preventive Dentistry</option>
                       <option value="Orthodontics">Orthodontics</option>
                     </Form.Select>
                   </Form.Group>
@@ -173,7 +167,7 @@ Message: ${form.message}`;
                       <Form.Control
                         type="text"
                         name="phone"
-                        placeholder="Phone"
+                        placeholder="Phone (with country code)"
                         value={form.phone}
                         onChange={handleChange}
                         required
@@ -224,6 +218,27 @@ Message: ${form.message}`;
           </Row>
         </Container>
       </section>
+
+      {/* Success Modal */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Booking Successful </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Your appointment has been booked successfully.</p>
+          <p>
+            <strong>Your Token:</strong> {token}
+          </p>
+          <p>
+            Please show this token at the clinic during your visit ✅
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="success" onClick={() => setShowModal(false)}>
+            Okay
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

@@ -25,25 +25,19 @@ const BookAppointment = () => {
   return (
     <div id="content" className="no-top no-bottom">
       {/* Subheader */}
-      <section
-        className="text-center py-5"
-        style={{
-          backgroundImage: "url('https://source.unsplash.com/1600x400/?dentist,clinic')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          color: "#fff",
-        }}
-      >
-        <Container>
-          <h1>Book Appointment</h1>
-          <p>
-            <a href="/" style={{ color: "#fff", textDecoration: "underline" }}>
-              Home
-            </a>{" "}
-            / Book Appointment
-          </p>
-        </Container>
-      </section>
+          <section
+            className="text-center py-5 text-light"
+            style={{ backgroundColor: "#4A7CD2" }}
+          >
+            <Container>
+              <h1>About Us</h1>
+              <hr className="border-light my-3" />
+              <p>
+                <a href="/" className="text-light">Home</a> / About us
+              </p>
+            </Container>
+          </section>
+    
 
       {/* Appointment Section */}
       <section className="py-5">
